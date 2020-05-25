@@ -10,6 +10,8 @@ public class Main {
     static final char DOT_O = 'O';
     static final char DOT_EMPTY = '.';
     static char[][] map;
+    static int prevX = -1;
+    static int prevY = -1;
     static Scanner scanner = new Scanner(System.in);
     static Random random;
 
@@ -82,6 +84,7 @@ public class Main {
     }
 
     public static void aiTurn(){
+        random = new Random();
         int x, y;
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
@@ -107,12 +110,84 @@ public class Main {
                 }
             }
         }
-        random = new Random();
+        int minX = 0, minY = 0, maxX = SIZE - 1, maxY = SIZE - 1;
+        if (!(prevX == -1) && !(prevY == -1)) {
+            if (prevX - DOTS_TO_WIN + 1 >= 0) {minX = prevX - DOTS_TO_WIN + 1;}
+            if (prevY - DOTS_TO_WIN + 1 >= 0) {minY = prevY - DOTS_TO_WIN + 1;}
+            if (prevX + DOTS_TO_WIN <= SIZE) {maxX = prevX + DOTS_TO_WIN - 1;}
+            if (prevY + DOTS_TO_WIN <= SIZE) {maxY = prevY + DOTS_TO_WIN - 1;}
+            int countLine = 0;
+            for (int i = minY; i <= maxY; i++) {
+                if ((map[i][prevX] == DOT_EMPTY) || (map[i][prevX] == DOT_O)) {countLine++;}
+                else countLine = 0;
+                if (countLine == DOTS_TO_WIN) {
+                    x = prevX;
+                    do {
+                        y = random.nextInt(DOTS_TO_WIN) + (i - DOTS_TO_WIN + 1);
+                    } while (!isCellValid(y, x));
+                    map[y][x] = DOT_O;
+                    prevY = y;
+                    return;
+                }
+            }
+            countLine = 0;
+            for (int i = minX; i <= maxX; i++) {
+                if ((map[prevY][i] == DOT_EMPTY) || (map[prevY][i] == DOT_O)) {countLine++;}
+                else countLine = 0;
+                if (countLine == DOTS_TO_WIN) {
+                    y = prevY;
+                    do {
+                        x = random.nextInt(DOTS_TO_WIN) + (i - DOTS_TO_WIN + 1);
+                    } while (!isCellValid(y, x));
+                    map[y][x] = DOT_O;
+                    prevX = x;
+                    return;
+                }
+            }
+
+            for (int i = minY; i <= maxY; i++) {
+                countLine = 0;
+                for (int j = minX; j <maxX - i ; j++) {
+                    if ((map[i+j][j] == DOT_EMPTY) || (map[i+j][j] == DOT_O)) {countLine++;}
+                    else countLine = 0;
+                    if (countLine == DOTS_TO_WIN) {
+                        do {
+                            x = random.nextInt(DOTS_TO_WIN) + (i - DOTS_TO_WIN + 1);
+                        } while (!isCellValid(x + i, x));
+                        y = x + i;
+                        map[y][x] = DOT_O;
+                        prevX = x;
+                        prevY = y;
+                        return;
+                    }
+                }
+            }
+            for (int i = minY; i <= maxY; i++) {
+                countLine = 0;
+                for (int j = maxX; j < minX + i; j++) {
+                    if ((map[i+maxX - j][j] == DOT_EMPTY) || (map[i + maxX - j][j] == DOT_O)) {countLine++;}
+                    else countLine = 0;
+                    if (countLine == DOTS_TO_WIN) {
+                        do {
+                            x = random.nextInt(DOTS_TO_WIN) + (i - DOTS_TO_WIN + 1);
+                        } while (!isCellValid(SIZE - 1 - x + i, x));
+                        y = SIZE - 1 - x + i;
+                        map[y][x] = DOT_O;
+                        prevX = x;
+                        prevY = y;
+                        return;
+                    }
+                }
+            }
+        }
+
         do {
             x = random.nextInt(SIZE);
             y = random.nextInt(SIZE);
         } while (!isCellValid(y, x));
         map[y][x] = DOT_O;
+        prevY = y;
+        prevX = x;
     }
 
     public static boolean isFull() {
@@ -160,7 +235,7 @@ public class Main {
 
         for (int i = 0; i <= SIZE - DOTS_TO_WIN; i++) { //проверка 2-ой диагонали
             int countLine = 1;
-            for (int j = SIZE - 1; j > 0 + i; j--){
+            for (int j = SIZE - 1; j > i; j--){
                 if ((map[i + SIZE - 1 - j][j] == c) && (map[i + SIZE - j][j-1] == c)) {
                     countLine++;
                     if (countLine == DOTS_TO_WIN) {return true;}
